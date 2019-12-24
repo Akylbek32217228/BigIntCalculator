@@ -37,4 +37,60 @@ TEST_CASE("Arithmetic operations +")
 	== BigInt("100000000000000000000000000000"));
 	
 }
+
+TEST_CASE("Arithmetic operations -")
+{
+	REQUIRE((BigInt("3") - BigInt("2")) == BigInt("1"));
+	REQUIRE((BigInt("5") - BigInt("5")) == BigInt("0"));
+	REQUIRE((BigInt("100000000000000000000") - BigInt("100000000000000000000"))
+	== BigInt("0"));
+	REQUIRE((BigInt("-3") - BigInt("2")) == BigInt("-5"));
+	REQUIRE((BigInt("-3") - BigInt("-2")) == BigInt("-1"));
+	REQUIRE((BigInt("3") - BigInt("-2")) == BigInt("5"));
+	REQUIRE((BigInt("99999999999999999999999999999") - BigInt("1"))
+	== BigInt("99999999999999999999999999998"));
+}
+
+TEST_CASE("Arithmetic operations *")
+{
+	REQUIRE((BigInt("3") * BigInt("2")) == BigInt("6"));
+	REQUIRE((BigInt("5") * BigInt("5")) == BigInt("25"));
+	REQUIRE((BigInt("100000000000000000000") * BigInt("100000000000000000000"))
+	== BigInt("10000000000000000000000000000000000000000"));
+	REQUIRE((BigInt("-3") * BigInt("2")) == BigInt("-6"));
+	REQUIRE((BigInt("-3") * BigInt("-2")) == BigInt("6"));
+	REQUIRE((BigInt("3") * BigInt("-2")) == BigInt("-6"));
+	REQUIRE((BigInt("99999999999999999999999999999") * BigInt("1"))
+	== BigInt("99999999999999999999999999999"));
+}
+
+TEST_CASE("Arithmetic operations /")
+{
+	REQUIRE((BigInt("3") / BigInt("2")) == BigInt("1"));
+	REQUIRE((BigInt("5") / BigInt("5")) == BigInt("1"));
+	REQUIRE((BigInt("100000000000000000000") / BigInt("100000000000000000000"))
+	== BigInt("1"));
+	REQUIRE((BigInt("-3") / BigInt("2")) == BigInt("-1"));
+	REQUIRE((BigInt("-3") / BigInt("-2")) == BigInt("1"));
+	REQUIRE((BigInt("3") / BigInt("-2")) == BigInt("-1"));
+	REQUIRE((BigInt("99999999999999999999999999999") / BigInt("1"))
+	== BigInt("99999999999999999999999999999"));
+	REQUIRE((BigInt("123456789") / BigInt("4567")) == BigInt("27032"));
+
+}
+
+TEST_CASE("Arithmetic operations %")
+{
+	REQUIRE((BigInt("3") % BigInt("2")) == BigInt("1"));
+	REQUIRE((BigInt("5") % BigInt("5")) == BigInt("0"));
+	REQUIRE((BigInt("100000000000000000000") % BigInt("100000000000000000000"))
+	== BigInt("0"));
+	REQUIRE((BigInt("-3") % BigInt("2")) == BigInt("-1"));
+	REQUIRE((BigInt("-3") % BigInt("-2")) == BigInt("-1"));
+	REQUIRE((BigInt("3") % BigInt("-2")) == BigInt("1"));
+	REQUIRE((BigInt("99999999999999999999999999999") % BigInt("1"))
+	== BigInt("0"));
+	REQUIRE((BigInt("123456789") % BigInt("4567")) == BigInt("1645"));
+}
+
 #endif

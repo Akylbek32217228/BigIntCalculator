@@ -5,8 +5,8 @@
 
 using namespace std;
 
-bool parseExpr(const string& line, BigInt& a, char& op, BigInt& b);
-void computeAndShow(const BigInt& a, char op, const BigInt& b);
+bool parseExpr(const string& line, BigInt& a, string& op, BigInt& b);
+void computeAndShow(const BigInt& a, string op, const BigInt& b);
 void showResult(const BigInt& r);
 
 int main()
@@ -20,7 +20,7 @@ int main()
 		{
 			BigInt a;
 			BigInt b;
-			char op;
+			string op;
 			if (!parseExpr(line, a, op, b))
             {
                 cout << "Incorrect expression: " << line << endl;
@@ -38,52 +38,96 @@ int main()
 	}
 }
 
-bool parseExpr(const string& line, BigInt& a, char& op, BigInt& b)
+bool parseExpr(const string& line, BigInt& a, string& op, BigInt& b)
 {
-    const string operations = "+-*:<>=#";
-
+    const string operations = "+-*:<>=#/";
+	
+	const vector<string> ops = {"+", "-","/", "*", ">" , "<", 
+	"+=", "-+", "*=", "/=",  "%", "!=", "=="};
+	bool t = false;
+	
+	for(int i = 0; i < ops.size(); ++i)
+	{
+		if(ops[i] == op)
+		{
+			t = true;
+			break;
+		}
+	}
     istringstream sinp(line);
     if (!(sinp >> a))
     {
         return false;
     }
-    if (!(sinp >> op) || operations.find(op) == string::npos)
+	
+	
+    if (!(sinp >> op) || t)
     {
         return false;
     }
-
-    char c;
+	
+	if(sinp.eof() && (op == "++" || op == "--"))
+	{
+		b = BigInt("1");
+		return true;
+	}
+	
+    char c,l;
+	sinp >> l;
+	if(l == '0')
+	{
+		throw runtime_error("Error! division by zero!");
+	} else 
+	{
+		sinp.unget();
+	}
+	
     if (!(sinp >> b) || sinp >> c)
     {
         return false;
     }
-
+	
     return true;
 }
 
-void computeAndShow(const BigInt& a, char op, const BigInt& b)
+void computeAndShow(const BigInt& a, string op, const BigInt& b)
 {
-    switch (op)
-    {
-    case '+':
-        showResult(a + b);
-        break;
-	case '-':
+	if(op == "+" || op == "+=")
+	{
+		showResult(a + b);
+	} else if(op == "-" || op == "-=")
+	{
 		showResult(a - b);
-		break;
-	case '*':
+	} else if(op == "*" || op == "*=")
+	{
 		showResult(a * b);
-		break;
-	case '=':
-		cout << (a == b) << endl;
-		break;
-	case '>':
+	} else if(op == "/" || op == "/=")
+	{
+		showResult(a / b);
+	} else if(op == ">")
+	{
 		cout << (a > b) << endl;
-		break;
-	case '<':
+	} else if(op == "<")
+	{
 		cout << (a < b) << endl;
-		break;
-    }
+	} else if(op == ">=")
+	{
+		cout << (a >= b) << endl;
+	} else if(op == "<=")
+	{
+		cout << (a <= b) << endl;
+	} else if(op == "%")
+	{
+		showResult(a % b);
+	}else if( op == "++")
+	{
+		showResult(a + b);
+	} else if( op == "--")
+	{
+		showResult(a - b);
+	} else if( op == "=="){
+		cout << (a == b) << endl;
+	}
 }
 
 void showResult(const BigInt& r)

@@ -1,5 +1,6 @@
 #include "BigInt.h"
 #include <iostream>
+#include <algorithm>
 
 using namespace std;
 
@@ -162,6 +163,36 @@ BigInt operator*(const BigInt& a, const BigInt& b)
 	return BigInt("0");
 }
 
+BigInt operator/(const BigInt& a, const BigInt& b)
+{
+	bool isNegA = a.mIsNegative;
+	bool isNegB = b.mIsNegative;
+	
+	if((!isNegA && !isNegB) || (isNegA && isNegB))
+	{
+		return BigInt(divide(a.mDigits, b.mDigits), false);
+	} else 
+	{
+		return BigInt(divide(a.mDigits, b.mDigits), true);
+	}
+	return BigInt("0");
+}
+
+BigInt operator%(const BigInt& a, const BigInt& b)
+{
+	bool isNegA = a.mIsNegative;
+	bool isNegB = b.mIsNegative;
+	
+	if((!isNegA && !isNegB) || (!isNegA && isNegB))
+	{
+		return BigInt(remainder(a.mDigits, b.mDigits), false);
+	} else if((isNegA && isNegB) || (isNegA && !isNegB))
+	{
+		return BigInt(remainder(a.mDigits, b.mDigits), true);
+	}
+	return BigInt("0");
+}
+
 bool operator==(const BigInt& a, const BigInt& b)
 {
 	int x = compare(a.mDigits, b.mDigits);
@@ -292,8 +323,6 @@ bool operator>=(const BigInt& a, const BigInt& b)
 	return false;
 }
 
-
-
 int compare(const vector<int64_t>& vc1, const vector<int64_t>& vc2)
 {
 	int x = 2;
@@ -408,19 +437,24 @@ vector<int64_t> subtract(const vector<int64_t>& vc1,const vector<int64_t>& vc2)
 	int res = 0;
     while( (j != -1) || (g != -1))
     {
+		bool b = false;
         if( j != -1)
         {
+			
 			res = vc1[j];
+			if(carry == 1 && res == 0)
+				b = true;
 			res += 10;
 			res -= carry;
+			
             --j;
         }
         if(g != -1)
         {
-			if(res%10 < vc2[g])
+			if(res%10 < vc2[g] || b)
 			{
-				carry = 1;
 				res -= vc2[g];
+				carry = 1;
 			} else 
 			{
 				res -= vc2[g];
@@ -428,7 +462,7 @@ vector<int64_t> subtract(const vector<int64_t>& vc1,const vector<int64_t>& vc2)
 			}
             --g;
         }
-        
+		b = false;
         newV[k] = res%10;
         --k; 
     }
@@ -506,4 +540,263 @@ vector<int64_t> multiply(const vector<int64_t>& vc1,const vector<int64_t>& vc2)
 	
     return newV;
 }
+
+vector<int64_t> divide(const vector<int64_t>& vc1, const vector<int64_t>& vc2)
+{
+	vector<int64_t> newV;
+	vector<int64_t> dividend = vc1;
+	newV.reserve(max(vc1.size(), vc2.size()));
+	int x = compare(vc1, vc2);
+	
+	if(x == 1)
+	{
+		vector<vector<int64_t>> vectors = getNewVectors(dividend, vc2);
+		vector<int64_t> vc3 = vectors.back();
+		vectors.pop_back();
+		while(vectors.size() != 0) {
+			
+			vector<int64_t> vc4 = {0};
+			int count = 0;
+			int g = x;
+			int t = x;
+			while(g == 1)
+			{
+				vc4 = add(vc4,vc2);
+				++count;
+				g = compare(vc3,vc4);				
+				if(g == 3)
+					g = 1;
+ 			}
+			if(count > 0)
+			{
+				--count;
+				vc4 = subtract(vc4, vc2);				
+			}
+			if(t == 3)
+			{
+				++count;
+				vc4 = add(vc4,vc2);
+			}
+
+			newV.push_back(count);
+			
+			vector<int64_t> vc5 = subtract(vc3, vc4);
+			
+			if(compare(vc5, vc2) == 2 && vectors.size() != 0)
+			{
+				if(vc5.back() == 0)
+				{
+					if(compare(vectors.back(), vc2) == 2)
+					{
+						vc3 = vectors.back();
+						vectors.pop_back();
+					} else 
+					{
+						vc3 = vectors.back();
+						vectors.pop_back();
+					}
+				} else 
+				{
+					int c = 0;
+					while(compare(vc5, vc2) == 2)
+					{
+						vc5.insert(vc5.end(), vectors.back().begin(), 
+						vectors.back().end());
+						vectors.pop_back();	
+						++c;
+						if(c == 1)
+						{
+							break;
+						}
+					}
+					vc3 = vc5;
+				}
+					
+			}
+			x = compare(vc3, vc2);
+		}
+		
+		vector<int64_t> vc4 = {0};
+		int count = 0;
+		int g = x;
+		int t = x;
+		while(g == 1)
+		{
+			vc4 = add(vc4,vc2);
+			++count;
+			g = compare(vc3,vc4);
+			if(g == 3)
+					g = 1;
+		}
+		if(count > 0)
+		{
+			--count;
+			vc4 = subtract(vc4, vc2);				
+		}
+		if(t == 3)
+		{
+			++count;
+		}
+
+		newV.push_back(count);
+		
+	} else if(x == 3)
+	{
+		return vector<int64_t> {1};
+	} else 
+	{
+		return vector<int64_t> {0};
+	}
+	
+	
+	return newV;
+}
+
+vector<vector<int64_t>> getNewVectors(vector<int64_t>& vc1, const vector<int64_t>& vc2)
+{
+	
+	vector<int64_t> newVector;
+	vector<vector<int64_t>> newVectors;
+	int divSize = vc2.size();
+	newVector.reserve(divSize + 1);
+	newVectors.reserve(vc1.size());
+	for(int i = 0; i < divSize; ++i)
+	{
+		newVector.push_back(vc1[i]);
+	}
+	
+	vc1.erase(vc1.begin(), vc1.begin() + divSize);
+	
+	int x = compare(newVector, vc2);
+	if(x == 2)
+	{
+		newVector.push_back(vc1[0]);
+		vc1.erase(vc1.begin(), vc1.begin() + 1);
+		newVectors.push_back(newVector);
+	} else 
+	{
+		newVectors.push_back(newVector);
+	}
+	
+	while(vc1.size() != 0)
+	{
+		vector<int64_t> vc = {vc1[0]};
+		vc1.erase(vc1.begin(), vc1.begin() + 1);
+		newVectors.push_back(vc);
+	}
+	reverse(newVectors.begin(), newVectors.end());
+	
+	return newVectors;
+}
+
+vector<int64_t> remainder(const vector<int64_t>& vc1, const vector<int64_t>& vc2)
+{
+	vector<int64_t> newV;
+	vector<int64_t> dividend = vc1;
+	newV.reserve(max(vc1.size(), vc2.size()));
+	int x = compare(vc1, vc2);
+	
+	if(x == 1)
+	{
+		vector<vector<int64_t>> vectors = getNewVectors(dividend, vc2);
+		vector<int64_t> vc3 = vectors.back();
+		vectors.pop_back();
+		while(vectors.size() != 0) {
+			
+			vector<int64_t> vc4 = {0};
+			int count = 0;
+			int g = x;
+			int t = x;
+			while(g == 1)
+			{
+				vc4 = add(vc4,vc2);
+				++count;
+				g = compare(vc3,vc4);				
+				if(g == 3)
+					g = 1;
+ 			}
+			if(count > 0)
+			{
+				--count;
+				vc4 = subtract(vc4, vc2);				
+			}
+			if(t == 3)
+			{
+				++count;
+				vc4 = add(vc4,vc2);
+			}
+
+			
+			vector<int64_t> vc5 = subtract(vc3, vc4);
+			
+			if(compare(vc5, vc2) == 2 && vectors.size() != 0)
+			{
+				if(vc5.back() == 0)
+				{
+					if(compare(vectors.back(), vc2) == 2)
+					{
+						vc3 = vectors.back();
+						vectors.pop_back();
+					} else 
+					{
+						vc3 = vectors.back();
+						vectors.pop_back();
+					}
+				} else 
+				{
+					int c = 0;
+					while(compare(vc5, vc2) == 2)
+					{
+						vc5.insert(vc5.end(), vectors.back().begin(), 
+						vectors.back().end());
+						vectors.pop_back();	
+						++c;
+						if(c == 1)
+						{
+							break;
+						}
+					}
+					vc3 = vc5;
+				}
+					
+			}
+			x = compare(vc3, vc2);
+		}
+		
+		vector<int64_t> vc4 = {0};
+		int count = 0;
+		int g = x;
+		int t = x;
+		while(g == 1)
+		{
+			vc4 = add(vc4,vc2);
+			++count;
+			g = compare(vc3,vc4);
+			if(g == 3)
+					g = 1;
+		}
+		if(count > 0)
+		{
+			--count;
+			vc4 = subtract(vc4, vc2);				
+		}
+		if(t == 3)
+		{
+			++count;
+		}
+		
+		vector<int64_t> vc5 = subtract(vc3, vc4);
+
+		newV = vc5;
+	} else if(x == 3)
+	{
+		return vector<int64_t>{0};
+	} else if(x == 2)
+	{
+		newV = vc1;
+	}
+	
+	return newV;
+}
+
 
